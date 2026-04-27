@@ -30,7 +30,6 @@ export default function HomePage() {
         setError("Backend is unreachable. Start FastAPI on port 8000 and refresh.");
       }
     };
-
     bootstrap();
   }, []);
 
@@ -39,7 +38,6 @@ export default function HomePage() {
       setLiveSuggestions([]);
       return undefined;
     }
-
     const timer = setTimeout(async () => {
       try {
         const data = await fetchSuggestions(text);
@@ -48,7 +46,6 @@ export default function HomePage() {
         setLiveSuggestions([]);
       }
     }, 350);
-
     return () => clearTimeout(timer);
   }, [text]);
 
@@ -57,7 +54,6 @@ export default function HomePage() {
       setError("Please enter some text to analyze.");
       return;
     }
-
     try {
       setLoading(true);
       setError("");
@@ -83,67 +79,117 @@ export default function HomePage() {
     }
   };
 
+  const isHealthy = health?.status === "healthy" || health?.status === "ok";
+
   return (
     <div className="space-y-8">
+
+      {/* ── Header with backend status pill ── */}
       <PageHeader
         eyebrow="Core Analyzer"
-        title="A cleaner, stronger workspace for Bengali-English dialect analysis"
-        description="Run the MuRIL-based analysis pipeline, inspect cluster confidence, review cleaned text, and compare two sentences with a hybrid similarity score that behaves much better on noisy romanized inputs."
+        title="Bengali-English dialect analysis workspace"
+        description="Run the MuRIL-based pipeline, inspect cluster confidence, review cleaned text, and compare sentences with a hybrid similarity score tuned for noisy romanized inputs."
         actions={
-          <div className="rounded-3xl border border-white/10 bg-slate-950/70 px-5 py-4">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Backend Status</p>
-            <p className="mt-2 text-lg font-medium text-white">{health?.status || "checking..."}</p>
-            <p className="text-sm text-slate-400">Mode: {health?.model_mode || "unknown"}</p>
+          <div className="rounded-[2rem] border border-white/10 bg-slate-950/70 px-6 py-5">
+            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Backend Status</p>
+            <div className="mt-3 flex items-center gap-2.5">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isHealthy ? "bg-emerald-400" : "bg-slate-600"
+                }`}
+              />
+              <p className="text-base font-medium text-white">
+                {health?.status || "checking…"}
+              </p>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-500">
+              Mode:{" "}
+              <span className="text-slate-300">{health?.model_mode || "unknown"}</span>
+            </p>
           </div>
         }
       />
 
+      {/* ── Stat row ── */}
       <section className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Analyzer Mode" value={health?.model_mode || "..." } helper="Uses your PyTorch model when present." />
-        <StatCard label="Sample Inputs" value={samples.length || 0} helper="Quick-start examples loaded from the API." />
-        <StatCard label="Feature Stack" value="9 pages" helper="Analysis, search, conversion, correction, and more." />
+        <StatCard
+          label="Analyzer Mode"
+          value={health?.model_mode || "…"}
+          helper="Uses your PyTorch model when present."
+        />
+        <StatCard
+          label="Sample Inputs"
+          value={samples.length || 0}
+          helper="Quick-start examples loaded from the API."
+        />
+        <StatCard
+          label="Feature Stack"
+          value="9 pages"
+          helper="Analysis, search, conversion, correction, and more."
+        />
       </section>
 
-      <section className="grid gap-8 xl:grid-cols-[1.08fr,0.92fr]">
+      {/* ── Input + Info row ── */}
+      <section className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
+
+        {/* Input panel */}
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-panel backdrop-blur">
-          <label className="text-sm uppercase tracking-[0.24em] text-slate-400">Input Text</label>
+          <label className="text-xs uppercase tracking-[0.24em] text-slate-400">
+            Input Text
+          </label>
+
           <textarea
             value={text}
             onChange={(event) => setText(event.target.value)}
-            rows="7"
-            className="mt-4 w-full rounded-3xl border border-white/10 bg-slate-950/75 p-5 text-slate-100 outline-none transition focus:border-sky-400"
-            placeholder="Type code-mixed Bengali-English text here..."
+            rows={7}
+            className="mt-4 w-full rounded-3xl border border-white/10 bg-slate-950/75 p-5 text-slate-100 outline-none transition focus:border-sky-400 placeholder:text-slate-600"
+            placeholder="Type code-mixed Bengali-English text here…"
           />
+
+          {/* Actions */}
           <div className="mt-4 flex flex-wrap gap-3">
             <button
               onClick={handleAnalyze}
               disabled={loading}
-              className="rounded-full bg-sky-400 px-5 py-3 font-medium text-slate-950 transition hover:bg-sky-300 disabled:bg-slate-600"
+              className="rounded-full bg-sky-400 px-6 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-sky-300 disabled:bg-slate-600 disabled:text-slate-400"
             >
-              {loading ? "Analyzing..." : "Analyze"}
+              {loading ? "Analyzing…" : "Analyze"}
             </button>
+
             {samples.map((sample) => (
               <button
                 key={sample}
                 onClick={() => setText(sample)}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-sky-400 hover:text-white"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300 transition hover:border-sky-400/50 hover:text-white"
               >
                 {sample}
               </button>
             ))}
           </div>
+
+          {/* Language mix tag */}
           {result?.language_mix_label ? (
-            <p className="mt-4 text-sm text-sky-200">Language mix: {result.language_mix_label}</p>
+            <div className="mt-5 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+              <p className="text-xs text-sky-200">
+                Language mix:{" "}
+                <span className="font-medium">{result.language_mix_label}</span>
+              </p>
+            </div>
           ) : null}
+
+          {/* Live suggestions */}
           {liveSuggestions.length ? (
             <div className="mt-4 rounded-3xl border border-white/10 bg-slate-950/60 p-4">
-              <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Live Suggestions</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
+                Live Suggestions
+              </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {liveSuggestions.map((item) => (
                   <button
                     key={item.text}
                     onClick={() => setText(item.text)}
-                    className="rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-2 text-sm text-sky-100 transition hover:bg-sky-300/20"
+                    className="rounded-full border border-sky-300/20 bg-sky-300/10 px-3 py-1.5 text-xs text-sky-100 transition hover:bg-sky-300/20"
                   >
                     {item.text}
                   </button>
@@ -151,20 +197,60 @@ export default function HomePage() {
               </div>
             </div>
           ) : null}
-          {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
+
+          {/* Error */}
+          {error ? (
+            <p className="mt-4 text-xs text-rose-300">{error}</p>
+          ) : null}
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-sky-400/18 via-white/5 to-amber-300/10 p-6 shadow-panel">
-          <p className="text-sm uppercase tracking-[0.26em] text-sky-100">What improved</p>
-          <div className="mt-5 space-y-4 text-sm leading-7 text-slate-200">
-            <p>Real checkpoint-based embeddings instead of only a fallback path.</p>
-            <p>Hybrid similarity that combines embedding, token, and character signals.</p>
-            <p>Cleaner layout and dedicated pages for visuals, analytics, batch work, and suggestions.</p>
+        {/* Info / changelog panel */}
+        <div className="flex flex-col gap-4">
+
+          {/* Gradient highlight card */}
+          <div className="flex-1 rounded-[2rem] border border-white/10 bg-gradient-to-br from-sky-400/[0.13] via-white/5 to-amber-300/[0.08] p-6 shadow-panel">
+            <p className="text-xs uppercase tracking-[0.26em] text-sky-300">
+              What improved
+            </p>
+            <div className="mt-5 space-y-5">
+              {[
+                {
+                  title: "Real embeddings",
+                  body: "Checkpoint-based embeddings instead of only a fallback path.",
+                },
+                {
+                  title: "Hybrid similarity",
+                  body: "Combines embedding, token, and character signals for better results.",
+                },
+                {
+                  title: "Dedicated pages",
+                  body: "Separate views for visuals, analytics, batch work, and suggestions.",
+                },
+              ].map((item) => (
+                <div key={item.title} className="flex gap-3">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-100">{item.title}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quick tip card */}
+          <div className="rounded-[2rem] border border-white/10 bg-slate-950/60 px-6 py-5">
+            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Quick tip</p>
+            <p className="mt-3 text-xs leading-relaxed text-slate-400">
+              Type at least 4 characters and live suggestions appear automatically.
+              Click any suggestion to replace your current input instantly.
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-8 xl:grid-cols-[1.08fr,0.92fr]">
+      {/* ── Results + Compare row ── */}
+      <section className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
         <ResultPanel result={result} />
         <ComparePanel
           compareForm={compareForm}
@@ -179,6 +265,7 @@ export default function HomePage() {
           onSubmit={handleCompare}
         />
       </section>
+
     </div>
   );
 }
